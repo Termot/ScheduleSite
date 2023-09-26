@@ -11,7 +11,6 @@ from flask_moment import Moment
 from flask_babel import Babel, lazy_gettext as _l
 from config import Config
 from commands import bp as cli_bp
-from celery import Celery
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -37,11 +36,6 @@ def create_app(config_class=Config):
     babel.init_app(app, locale_selector=get_locale)
 
     app.register_blueprint(cli_bp)
-
-    app.config.update(CELERY_CONFIG={
-        'broker_url': 'redis://localhost:6379',
-        'result_backend': 'redis://localhost:6379',
-    })
 
     from app.errors import bp as errors_bp
     app.register_blueprint(errors_bp)
@@ -89,19 +83,6 @@ def create_app(config_class=Config):
 def get_locale():
     # return request.accept_languages.best_match(app.config['LANGUAGES'])
     return 'ru'
-
-
-def make_celery():
-    celery = Celery(app.import_name)
-    celery.conf.update(app.config['CELERY_CONFIG'])
-
-    class ContextTask(celery.Task):
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return self.run(*args, **kwargs)
-
-    celery.Task = ContextTask
-    return celery
 
 
 from app import models
