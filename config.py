@@ -11,17 +11,17 @@ class Config(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Почта
-    # MAIL_SERVER = os.environ.get('MAIL_SERVER')  # smtp.gmail.com
-    # MAIL_PORT = int(os.environ.get('MAIL_PORT') or 25)  # 587 (with TLSSTART)
-    # MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') is not None  # True
-    # MAIL_USERNAME = os.environ.get('MAIL_USERNAME')  # email address
-    # MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')  # email password
+    MAIL_SERVER = os.environ.get('MAIL_SERVER') or 'smtp.gmail.com'
+    MAIL_PORT = int(os.environ.get('MAIL_PORT') or 587)
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') or True
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME') or 'termometronator@gmail.com'
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD') or 'elwmmxuzncjbgdfa'
 
-    MAIL_SERVER = 'smtp.gmail.com'
-    MAIL_PORT = 587
-    MAIL_USE_TLS = True
-    MAIL_USERNAME = 'termometronator@gmail.com'
-    MAIL_PASSWORD = 'elwmmxuzncjbgdfa'
+    # MAIL_SERVER = 'smtp.gmail.com'
+    # MAIL_PORT = 587
+    # MAIL_USE_TLS = True
+    # MAIL_USERNAME = 'termometronator@gmail.com'
+    # MAIL_PASSWORD = 'elwmmxuzncjbgdfa'
 
     ADMINS = ['termometronator@gmail.com', 'slowlii80085@gmail.com']
 
@@ -30,3 +30,5 @@ class Config(object):
 
     # Языки перевода сайта
     LANGUAGES = ['ru', 'en']
+
+    REDIS_URL = os.environ.get('REDIS_URL') or 'redis://'

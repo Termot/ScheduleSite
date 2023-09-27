@@ -11,6 +11,8 @@ from flask_moment import Moment
 from flask_babel import Babel, lazy_gettext as _l
 from config import Config
 from commands import bp as cli_bp
+from redis import Redis
+import rq
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -36,6 +38,11 @@ def create_app(config_class=Config):
     babel.init_app(app, locale_selector=get_locale)
 
     app.register_blueprint(cli_bp)
+    app.redis = Redis.from_url(app.config['REDIS_URL'])
+    app.task_queue = rq.Queue('s-tasks', connection=app.redis)
+
+    from app.api import bp as api_bp
+    app.register_blueprint(api_bp, url_prifix='/api')
 
     from app.errors import bp as errors_bp
     app.register_blueprint(errors_bp)
