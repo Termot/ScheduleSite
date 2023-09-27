@@ -1,12 +1,14 @@
 import time
-from app import make_celery
+from rq import get_current_job
 
-celery = make_celery()
-
-@celery.Task()
 def example(seconds):
+    job = get_current_job()
     print('Starting task')
     for i in range(seconds):
+        job.meta['progress'] = 100.0 * i / seconds
+        job.save_meta()
         print(i)
         time.sleep(1)
+    job.meta['progress'] = 100
+    job.save_meta()
     print('Task completed')
