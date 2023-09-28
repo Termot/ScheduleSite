@@ -17,6 +17,104 @@ followers = db.Table(
     db.Column('followed_id', db.Integer, db.ForeignKey('user.id'))
 )
 
+# schedule_table = db.Table('schedule', db.Model.metadata,
+#     db.Column('left_id', db.Integer, db.ForeignKey('left.id')),
+#     db.Column('right_id', db.Integer, db.ForeignKey('right.id'))
+# )
+#
+# class ScheduleHelper(db.Model):
+#     __tablename__ = 'left'
+#     id = db.Column(db.Integer, primary_key=True)
+#     children = db.relationship("DayOfTheWeek",
+#                     secondary=schedule_table)
+#
+# class DayOfTheWeek(db.Model):
+#     __tablename__ = 'right'
+#     id = db.Column(db.Integer, primary_key=True)
+
+schedule = db.Table('schedule', db.Model.metadata,
+    db.Column('schedule_helper_id', db.Integer, db.ForeignKey('schedule_helper.id')),
+    db.Column('day_of_the_week_id', db.Integer, db.ForeignKey('day_of_the_week.id')),
+    db.Column('evenness_id', db.Integer, db.ForeignKey('evenness.id')),
+    db.Column('couple_id', db.Integer, db.ForeignKey('couple.id')),
+    db.Column('group_id', db.Integer, db.ForeignKey('group.id')),
+    db.Column('discipline_id', db.Integer, db.ForeignKey('discipline.id')),
+    db.Column('auditory_id', db.Integer, db.ForeignKey('auditory.id')),
+)
+
+
+class ScheduleHelper(db.Model):
+    __tablename__ = 'schedule_helper'
+    id = db.Column(db.Integer, primary_key=True)
+    day_of_the_week = db.relationship('DayOfTheWeek', secondary=schedule)
+    evenness = db.relationship('Evenness', secondary=schedule)
+    couple = db.relationship('Couple', secondary=schedule)
+    group = db.relationship('Group', secondary=schedule)
+    discipline = db.relationship('Discipline', secondary=schedule)
+    auditory = db.relationship('Auditory', secondary=schedule)
+
+    def __repr__(self):
+        return f'Schedule "{self.day_of_the_week}"'
+
+
+class DayOfTheWeek(db.Model):
+    __tablename__ = 'day_of_the_week'
+    id = db.Column(db.Integer, primary_key=True)
+    day_of_the_week = db.Column(db.String(16))
+
+    def __repr__(self):
+        return f'<Day of the week "{self.day_of_the_week}">'
+
+
+class Evenness(db.Model):
+    __tablename__ = 'evenness'
+    id = db.Column(db.Integer, primary_key=True)
+    weeks = db.Column(db.String(5))
+    evenness = db.Column(db.String(5))
+
+    def __repr__(self):
+        return f'''<
+        Weeks "{self.weeks}"
+        Evenness "{self.evenness}">'''
+
+
+class Couple(db.Model):
+    __tablename__ = 'couple'
+    id = db.Column(db.Integer, primary_key=True)
+    couple = db.Column(db.Integer)
+
+    def __repr__(self):
+        return f'''<
+         Couple:
+         "{self.couple}">'''
+
+
+class Group(db.Model):
+    __tablename__ = 'group'
+    id = db.Column(db.Integer, primary_key=True)
+    group = db.Column(db.String(32))
+
+    def __repr__(self):
+        return f'<Group "{self.group}">'
+
+
+class Discipline(db.Model):
+    __tablename__ = 'discipline'
+    id = db.Column(db.Integer, primary_key=True)
+    discipline = db.Column(db.String(32))
+
+    def __repr__(self):
+        return f'<Discipline "{self.discipline}">'
+
+
+class Auditory(db.Model):
+    __tablename__ = 'auditory'
+    id = db.Column(db.Integer, primary_key=True)
+    auditory = db.Column(db.String(10))
+
+    def __repr__(self):
+        return f'<Auditory "{self.auditory}">'
+
 
 # Класс для операций с пользователем
 class User(UserMixin, db.Model):

@@ -2,6 +2,10 @@ from datetime import datetime, timedelta
 import unittest
 from app import create_app, db
 from app.models import User, Post
+
+from app.models import ScheduleHelper, DayOfTheWeek, \
+    Evenness, Couple, Group, Discipline, Auditory
+
 from config import Config
 
 
@@ -94,6 +98,35 @@ class UserModelCase(unittest.TestCase):
         self.assertEqual(f2, [p2, p3])
         self.assertEqual(f3, [p3, p4])
         self.assertEqual(f4, [p4])
+
+    def test_schedule(self):
+        day_of_the_week = 'Понедельник'
+        weeks = '1-3'
+        evenness = 'all'
+        couple = 1
+        group = 'Г-301'
+        discipline = 'Математика'
+        auditory = '312/3'
+
+
+        table_day_of_the_week = DayOfTheWeek(day_of_the_week=day_of_the_week)
+        table_evenness = Evenness(weeks=weeks, evenness=evenness)
+        table_couple = Couple(couple=couple)
+        table_group = Group(group=group)
+        table_discipline = Discipline(discipline=discipline)
+        table_auditory = Auditory(auditory=auditory)
+
+        s_helper = ScheduleHelper()
+
+        s_helper.day_of_the_week.append(table_day_of_the_week)
+        s_helper.evenness.append(table_evenness)
+        s_helper.couple.append(table_couple)
+        s_helper.group.append(table_group)
+        s_helper.discipline.append(table_discipline)
+        s_helper.auditory.append(table_auditory)
+
+        db.session.add(s_helper)
+        db.session.commit()
 
 
 if __name__ == '__main__':
