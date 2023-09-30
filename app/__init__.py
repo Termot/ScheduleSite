@@ -13,8 +13,10 @@ from config import Config
 from commands import bp as cli_bp
 from redis import Redis
 import rq
+from flask_wtf import CSRFProtect
 
 db = SQLAlchemy()
+csrf = CSRFProtect()
 migrate = Migrate()
 login = LoginManager()
 login.login_view = 'auth.login'
@@ -30,6 +32,7 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
 
     db.init_app(app)
+    csrf.init_app(app)
     migrate.init_app(app, db)
     login.init_app(app)
     mail.init_app(app)
@@ -52,6 +55,9 @@ def create_app(config_class=Config):
 
     from app.main import bp as main_bp
     app.register_blueprint(main_bp)
+
+    from app.schedule import bp as schedule_bp
+    app.register_blueprint(schedule_bp, url_prefix='/schedule')
 
     if not app.debug and not app.testing:
         if app.config['MAIL_SERVER']:

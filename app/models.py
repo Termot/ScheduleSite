@@ -17,103 +17,43 @@ followers = db.Table(
     db.Column('followed_id', db.Integer, db.ForeignKey('user.id'))
 )
 
-# schedule_table = db.Table('schedule', db.Model.metadata,
-#     db.Column('left_id', db.Integer, db.ForeignKey('left.id')),
-#     db.Column('right_id', db.Integer, db.ForeignKey('right.id'))
-# )
-#
-# class ScheduleHelper(db.Model):
-#     __tablename__ = 'left'
-#     id = db.Column(db.Integer, primary_key=True)
-#     children = db.relationship("DayOfTheWeek",
-#                     secondary=schedule_table)
-#
-# class DayOfTheWeek(db.Model):
-#     __tablename__ = 'right'
-#     id = db.Column(db.Integer, primary_key=True)
 
-schedule = db.Table('schedule', db.Model.metadata,
-    db.Column('schedule_helper_id', db.Integer, db.ForeignKey('schedule_helper.id')),
-    db.Column('day_of_the_week_id', db.Integer, db.ForeignKey('day_of_the_week.id')),
-    db.Column('evenness_id', db.Integer, db.ForeignKey('evenness.id')),
-    db.Column('couple_id', db.Integer, db.ForeignKey('couple.id')),
-    db.Column('group_id', db.Integer, db.ForeignKey('group.id')),
-    db.Column('discipline_id', db.Integer, db.ForeignKey('discipline.id')),
-    db.Column('auditory_id', db.Integer, db.ForeignKey('auditory.id')),
-)
-
-
-class ScheduleHelper(db.Model):
-    __tablename__ = 'schedule_helper'
+class Schedule(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    day_of_the_week = db.relationship('DayOfTheWeek', secondary=schedule)
-    evenness = db.relationship('Evenness', secondary=schedule)
-    couple = db.relationship('Couple', secondary=schedule)
-    group = db.relationship('Group', secondary=schedule)
-    discipline = db.relationship('Discipline', secondary=schedule)
-    auditory = db.relationship('Auditory', secondary=schedule)
+    day_of_week = db.Column(db.String(20), nullable=False)
+    weeks = db.Column(db.String(20), nullable=False)
+    lesson_number = db.Column(db.Integer, nullable=False)
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
+    subject_id = db.Column(db.Integer, db.ForeignKey('subject.id'), nullable=False)
+    classroom_id = db.Column(db.Integer, db.ForeignKey('classroom.id'), nullable=False)
 
-    def __repr__(self):
-        return f'Schedule "{self.day_of_the_week}"'
-
-
-class DayOfTheWeek(db.Model):
-    __tablename__ = 'day_of_the_week'
-    id = db.Column(db.Integer, primary_key=True)
-    day_of_the_week = db.Column(db.String(16))
-
-    def __repr__(self):
-        return f'<Day of the week "{self.day_of_the_week}">'
-
-
-class Evenness(db.Model):
-    __tablename__ = 'evenness'
-    id = db.Column(db.Integer, primary_key=True)
-    weeks = db.Column(db.String(5))
-    evenness = db.Column(db.String(5))
-
-    def __repr__(self):
-        return f'''<
-        Weeks "{self.weeks}"
-        Evenness "{self.evenness}">'''
-
-
-class Couple(db.Model):
-    __tablename__ = 'couple'
-    id = db.Column(db.Integer, primary_key=True)
-    couple = db.Column(db.Integer)
-
-    def __repr__(self):
-        return f'''<
-         Couple:
-         "{self.couple}">'''
+    group = db.relationship('Group', backref=db.backref('schedules', lazy=True))
+    subject = db.relationship('Subject', backref=db.backref('schedules', lazy=True))
+    classroom = db.relationship('Classroom', backref=db.backref('schedules', lazy=True))
 
 
 class Group(db.Model):
-    __tablename__ = 'group'
     id = db.Column(db.Integer, primary_key=True)
-    group = db.Column(db.String(32))
+    name = db.Column(db.String(10), unique=True, nullable=False)
 
     def __repr__(self):
-        return f'<Group "{self.group}">'
+        return '<Group "{}">'.format(self.name)
 
 
-class Discipline(db.Model):
-    __tablename__ = 'discipline'
+class Subject(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    discipline = db.Column(db.String(32))
+    name = db.Column(db.String(100), unique=True, nullable=False)
 
     def __repr__(self):
-        return f'<Discipline "{self.discipline}">'
+        return '<Subject "{}">'.format(self.name)
 
 
-class Auditory(db.Model):
-    __tablename__ = 'auditory'
+class Classroom(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    auditory = db.Column(db.String(10))
+    name = db.Column(db.String(10), unique=True, nullable=False)
 
     def __repr__(self):
-        return f'<Auditory "{self.auditory}">'
+        return '<Classroom "{}">'.format(self.name)
 
 
 # Класс для операций с пользователем

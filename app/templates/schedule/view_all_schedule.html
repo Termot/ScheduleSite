@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <h1>All Schedules</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Group</th>
+                <th>Day of the Week</th>
+                <th>Weeks</th>
+                <th>Lesson Number</th>
+                <th>Subject</th>
+                <th>Classroom</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in schedule_entries %}
+                <tr>
+                    <td>{{ entry.group.name }}</td>
+                    <td>{{ entry.day_of_week }}</td>
+                    <td>{{ entry.weeks }}</td>
+                    <td>{{ entry.lesson_number }}</td>
+                    <td>{{ entry.subject.name }}</td>
+                    <td>{{ entry.classroom.name }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
