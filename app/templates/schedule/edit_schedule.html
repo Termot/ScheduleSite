@@ -2,14 +2,19 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    <h1>Add Schedule</h1>
+    <h1>Edit Schedule</h1>
     <div class="row">
         <div class="col-md-6">
             <form method="POST">
                 {{ form.csrf_token }}
                 <div class="form-group">
-                    {{ form.group.label }}
-                    <input type="text" id="group" name="group" class="form-control" value="{{ selected_group.name }}" readonly>
+                    <label for="group">Group</label>
+                    <input type="text" list="groups" id="group" name="group" class="form-control" value="{{ schedule_entry.group.name }}" readonly>
+                    <datalist id="groups">
+                        {% for group in groups %}
+                            <option value="{{ group.name }}"></option>
+                        {% endfor %}
+                    </datalist>
                 </div>
 
                 <div class="form-group">
@@ -25,8 +30,8 @@
                 </div>
 
                 <div class="form-group">
-                    {{ form.subject.label }}
-                    <input type="text" list="subjects" id="subject" name="subject" class="form-control">
+                    <label for="subject">Subject</label>
+                    <input type="text" list="subjects" id="subject" name="subject" class="form-control" value="{{ schedule_entry.subject.name }}">
                     <datalist id="subjects">
                         {% for subject in subjects %}
                             <option value="{{ subject.name }}"></option>
@@ -34,24 +39,30 @@
                     </datalist>
                 </div>
                 <div class="form-group">
-                    {{ form.classroom.label }}
-                    <input type="text" list="classrooms" id="classroom" name="classroom" class="form-control">
+                    <label for="classroom">Classroom</label>
+                    <input type="text" list="classrooms" id="classroom" name="classroom" class="form-control" value="{{ schedule_entry.classroom.name }}">
                     <datalist id="classrooms">
                         {% for classroom in classrooms %}
                             <option value="{{ classroom.name }}"></option>
                         {% endfor %}
                     </datalist>
                 </div>
-                {{ form.day_of_week.label }}
-                {{ form.day_of_week(class="form-control") }}
-                {{ form.lesson_number.label }}
-                {{ form.lesson_number(class="form-control") }}
-                {{ form.weeks.label }}
-                <select name="weeks" id="weeks" multiple class="form-control">
-                    {% for value, label in form.weeks.choices %}
-                        <option value="{{ value }}">{{ label }}</option>
-                    {% endfor %}
-                </select>
+                <div class="form-group">
+                    {{ form.day_of_week.label }}
+                    {{ form.day_of_week(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    {{ form.lesson_number.label }}
+                    {{ form.lesson_number(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    {{ form.weeks.label }}
+                    <select name="weeks" id="weeks" multiple class="form-control">
+                        {% for value, label in form.weeks.choices %}
+                            <option value="{{ value }}" {% if value in form.weeks.data %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
                 <div id="selected-weeks">
                     <!-- Здесь будут отображаться выбранные недели -->
                 </div>
@@ -59,12 +70,17 @@
                     {{ form.is_lecture.label(class="form-check-label") }}
                     {{ form.is_lecture(class="form-check-input") }}
                 </div>
-                <button type="submit" class="btn btn-primary">Add Schedule</button>
+                <button type="submit" class="btn btn-primary">Update Schedule</button>
             </form>
         </div>
     </div>
 {% endblock %}
 {% block scripts %}
+    <script>
+        const initialWeeks = {{ schedule_entry.weeks | tojson }};
+        // Ваши скриптовые действия с данными initialWeeks
+    </script>
+
     <script>
         const select = document.getElementById("weeks");
         const selectedWeeksDiv = document.getElementById("selected-weeks");
@@ -106,22 +122,42 @@
     </script>
 
     <script>
-        const checkboxes = document.querySelectorAll('.subgroup-checkbox');
+        document.addEventListener("DOMContentLoaded", function() {
+            const selectedWeeksDiv = document.getElementById("selected-weeks");
+            const scheduleWeeksString = {{ schedule_entry.weeks|tojson|safe }};
+            const scheduleWeeks = scheduleWeeksString.split(',').map(Number); // Разбиваем строку на массив чисел
 
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', () => {
-                checkboxes.forEach(otherCheckbox => {
-                    otherCheckbox.nextElementSibling.style.backgroundColor = '';
-                    otherCheckbox.nextElementSibling.style.color = '';
-                    otherCheckbox.nextElementSibling.style.opacity = '0.6';
-                });
 
-                if (checkbox.checked) {
-                    checkbox.nextElementSibling.style.backgroundColor = 'green';
-                    checkbox.nextElementSibling.style.color = 'white';
-                    checkbox.nextElementSibling.style.opacity = '1';
+            const formattedWeeks = [];
+            let currentRange = [scheduleWeeks[0]];
+
+            for (let i = 1; i < scheduleWeeks.length; i++) {
+                if (scheduleWeeks[i] === scheduleWeeks[i - 1] + 1) {
+                    // Продолжаем текущий диапазон
+                    currentRange[1] = scheduleWeeks[i];
+                } else {
+                    // Добавляем текущий диапазон или неделю, если диапазон состоит из одной недели
+                    if (currentRange[0] === currentRange[1]) {
+                        formattedWeeks.push(currentRange[0]);
+                    } else {
+                        formattedWeeks.push(`${currentRange[0]}-${currentRange[1]}`);
+                    }
+                    currentRange = [scheduleWeeks[i]];
                 }
-            });
+            }
+
+            // Добавляем последний диапазон или неделю, если верхняя граница существует
+            if (currentRange[0] === currentRange[1]) {
+                formattedWeeks.push(currentRange[0]);
+            } else {
+                formattedWeeks.push(`${currentRange[0]}-${currentRange[1]}`);
+            }
+
+            // Удаляем -undefined из строк
+            const cleanedWeeks = formattedWeeks.map(week => week.replace("-undefined", ""));
+
+            selectedWeeksDiv.innerHTML = "Selected Weeks: " + cleanedWeeks.filter(Boolean).join(", ");
         });
     </script>
+
 {% endblock %}

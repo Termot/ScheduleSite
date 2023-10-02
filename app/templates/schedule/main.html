@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <h1>Main Page</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <form method="GET" action="{{ url_for('schedule.add_schedule') }}">
+                <div class="form-group">
+                    <label for="group_select">Select a Group</label>
+                    <select class="form-control" id="group_select" name="selected_group">
+                        {% for group in groups %}
+                            <option value="{{ group.id }}">{{ group.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <form method="GET" action="{{ url_for('schedule.add_schedule', selected_group=selected_group_id) }}">
+                    <button type="submit" class="btn btn-primary">Add Schedule</button>
+                </form>
+                <form action="{{ url_for('schedule.create_group') }}">
+                    <button type="submit" class="btn btn-primary">Create group</button>
+                </form>
+                <form action="{{ url_for('schedule.view_all_schedule') }}">
+                    <button type="submit" class="btn btn-primary">View All Schedules</button>
+                </form>
+            </form>
+        </div>
+    </div>
+{% endblock %}

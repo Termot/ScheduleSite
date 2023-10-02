@@ -12,17 +12,30 @@
                 <th>Lesson Number</th>
                 <th>Subject</th>
                 <th>Classroom</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
             {% for entry in schedule_entries %}
                 <tr>
-                    <td>{{ entry.group.name }}</td>
+                    <td>{% if entry.subgroup != 0 %}{{ entry.group.name }}/{{ entry.subgroup }}{% else %}{{ entry.group.name }}{% endif %}</td>
                     <td>{{ entry.day_of_week }}</td>
                     <td>{{ entry.weeks }}</td>
                     <td>{{ entry.lesson_number }}</td>
-                    <td>{{ entry.subject.name }}</td>
+                    {% if entry.is_lecture %}
+                        <td>{{ entry.subject.name|upper }}</td>
+                    {% else %}
+                        <td>{{ entry.subject.name }}</td>
+                    {% endif %}
                     <td>{{ entry.classroom.name }}</td>
+                    <td>
+                        <a href="{{ url_for('schedule.edit_schedule', schedule_id=entry.id) }}" class="btn btn-primary btn-sm">
+                            Edit
+                        </a>
+                        <a href="{{ url_for('schedule.delete_schedule', schedule_id=entry.id) }}" class="btn btn-danger btn-sm">
+                            Delete
+                        </a>
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>

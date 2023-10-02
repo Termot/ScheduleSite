@@ -21,8 +21,10 @@ followers = db.Table(
 class Schedule(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     day_of_week = db.Column(db.String(20), nullable=False)
-    weeks = db.Column(db.String(20), nullable=False)
+    weeks = db.Column(db.String(40), nullable=False)
     lesson_number = db.Column(db.Integer, nullable=False)
+    is_lecture = db.Column(db.Boolean, default=False, nullable=False)
+    subgroup = db.Column(db.Integer, nullable=False)
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
     subject_id = db.Column(db.Integer, db.ForeignKey('subject.id'), nullable=False)
     classroom_id = db.Column(db.Integer, db.ForeignKey('classroom.id'), nullable=False)
@@ -35,9 +37,10 @@ class Schedule(db.Model):
 class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(10), unique=True, nullable=False)
+    subgroups = db.Column(db.String(32))
 
     def __repr__(self):
-        return '<Group "{}">'.format(self.name)
+        return '<Group "{}", Subgroups "{}">'.format(self.name, self.subgroups)
 
 
 class Subject(db.Model):

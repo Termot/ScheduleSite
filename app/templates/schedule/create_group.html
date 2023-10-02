@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <h1>Create Group</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <form method="POST">
+                {{ form.csrf_token }}
+                <div class="form-group">
+                    {{ form.name.label }}
+                    {{ form.name(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <label for="subgroups">Subgroups</label>
+                    <input type="text" id="subgroups" name="subgroups" class="form-control" value="{{ group.subgroups if group else '' }}">
+                    <div id="subgroups-buttons">
+                        <button type="button" class="btn btn-primary" id="add-subgroup">+</button>
+                        <button type="button" class="btn btn-danger" id="remove-subgroup">-</button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Group</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        const addSubgroupButton = document.getElementById("add-subgroup");
+        const removeSubgroupButton = document.getElementById("remove-subgroup");
+        const subgroupsInput = document.getElementById("subgroups");
+
+        let subgroups = [];
+
+        addSubgroupButton.addEventListener("click", () => {
+            subgroups.push(subgroups.length + 1);
+            updateSubgroupsInput();
+        });
+
+        removeSubgroupButton.addEventListener("click", () => {
+            if (subgroups.length > 0) {
+                subgroups.pop();
+                updateSubgroupsInput();
+            }
+        });
+
+        function updateSubgroupsInput() {
+            subgroupsInput.value = subgroups.join(",");
+        }
+    </script>
+{% endblock %}
