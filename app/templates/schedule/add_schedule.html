@@ -8,6 +8,11 @@
             <form method="POST">
                 {{ form.csrf_token }}
                 <div class="form-group">
+                    {{ form.faculty.label }}
+                    <input type="text" id="faculty" name="faculty" class="form-control" value="{{ selected_faculty.name }}" readonly>
+                </div>
+
+                <div class="form-group">
                     {{ form.group.label }}
                     <input type="text" id="group" name="group" class="form-control" value="{{ selected_group.name }}" readonly>
                 </div>

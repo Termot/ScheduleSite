@@ -7,23 +7,80 @@
         <div class="col-md-6">
             <form method="GET" action="{{ url_for('schedule.add_schedule') }}">
                 <div class="form-group">
-                    <label for="group_select">Select a Group</label>
-                    <select class="form-control" id="group_select" name="selected_group">
-                        {% for group in groups %}
-                            <option value="{{ group.id }}">{{ group.name }}</option>
+                    <label for="faculty_select">Select a Faculty</label>
+                    <select class="form-control" id="faculty_select" name="selected_faculty_id">
+                        {% for faculty in faculties %}
+                            <option value="{{ faculty.id }}">{{ faculty.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <form method="GET" action="{{ url_for('schedule.add_schedule', selected_group=selected_group_id) }}">
+                <div class="form-group">
+                    <label for="group_select">Select a Group</label>
+                    <select class="form-control" id="group_select" name="selected_group_id" disabled>
+                        <!-- Опции групп будут добавлены с помощью JavaScript -->
+                    </select>
+                </div>
+                <form method="GET" action="{{ url_for('schedule.add_schedule', selected_group_id=selected_group_id, selected_faculty_id=selected_faculty_id) }}">
                     <button type="submit" class="btn btn-primary">Add Schedule</button>
-                </form>
-                <form action="{{ url_for('schedule.create_group') }}">
-                    <button type="submit" class="btn btn-primary">Create group</button>
-                </form>
-                <form action="{{ url_for('schedule.view_all_schedule') }}">
-                    <button type="submit" class="btn btn-primary">View All Schedules</button>
                 </form>
             </form>
         </div>
     </div>
+    <a href="{{ url_for('schedule.view_all_schedule') }}" class="btn btn-success btn-sm">View All Schedules</a>
+    <a href="{{ url_for('schedule.create_faculty') }}" class="btn btn-success btn-sm">Create Faculty</a>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        // Получаем элементы выбора факультета и группы
+        const facultySelect = document.getElementById('faculty_select');
+        const groupSelect = document.getElementById('group_select');
+
+        // Функция для обновления опций в поле выбора групп
+        function updateGroupOptions(groups) {
+            // Очищаем текущие опции
+            groupSelect.innerHTML = '';
+
+            // Если есть доступные группы, добавляем их как опции
+            if (groups.length > 0) {
+                groups.forEach(group => {
+                    const option = document.createElement('option');
+                    option.value = group.id;
+                    option.textContent = group.name;
+                    groupSelect.appendChild(option);
+                });
+
+                // Включаем поле выбора групп и убираем атрибут disabled
+                groupSelect.removeAttribute('disabled');
+            } else {
+                // Если нет доступных групп, добавляем пустую опцию и устанавливаем атрибут disabled
+                const option = document.createElement('option');
+                option.textContent = 'No groups available';
+                groupSelect.appendChild(option);
+                groupSelect.setAttribute('disabled', 'disabled');
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const facultySelect = document.getElementById("faculty_select");
+            const groupSelect = document.getElementById("group_select");
+
+            // Определите вашу функцию обработки события изменения факультета
+            function handleFacultyChange() {
+                const selectedFacultyId = facultySelect.value;
+                fetch(`/schedule/get_groups_by_faculty/${selectedFacultyId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const groups = data.groups;
+                        updateGroupOptions(groups);
+                    });
+            }
+
+            // Добавьте слушателя события изменения факультета
+            facultySelect.addEventListener('change', handleFacultyChange);
+
+            // Вызовите функцию один раз при загрузке страницы
+            handleFacultyChange();
+        });
+    </script>
 {% endblock %}

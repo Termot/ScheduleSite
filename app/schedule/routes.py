@@ -1,25 +1,71 @@
-import json
-
 from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_babel import _
 from flask_login import login_required
 from app import db
-from app.models import Schedule, Group, Subject, Classroom
+from app.models import Schedule, Group, Subject, Classroom, Faculty
 from app.schedule import bp
-from app.schedule.forms import ScheduleForm, GroupForm
+from app.schedule.forms import ScheduleForm, GroupForm, FacultyForm
 
 
 @bp.route('/', methods=['GET', 'POST'])
 def main():
     groups = [group for group in Group.query.all()]
+    faculties = [faculty for faculty in Faculty.query.all()]
 
     return render_template('schedule/main.html',
-                           groups=groups)
+                           groups=groups,
+                           faculties=faculties)
 
 
-@bp.route('/create_group', methods=['GET', 'POST'])
-def create_group():
+@bp.route('/get_groups_by_faculty/<int:faculty_id>', methods=['GET'])
+def get_groups_by_faculty(faculty_id):
+    # Получите факультет по его ID
+    faculty = Faculty.query.get(faculty_id)
+
+    if faculty is None:
+        return jsonify({'groups': []})
+
+    # Используйте связь faculty.groups, чтобы получить группы, привязанные к факультету
+    groups = faculty.groups
+
+    # Создайте список групп для передачи обратно на клиентскую сторону
+    groups_list = [{'id': group.id, 'name': group.name} for group in groups]
+
+    return jsonify({'groups': groups_list})
+
+
+@bp.route('/create_faculty', methods=['GET', 'POST'])
+def create_faculty():
+    form = FacultyForm()
+
+    if form.validate_on_submit():
+        faculty = Faculty(name=form.name.data)
+        db.session.add(faculty)
+        db.session.commit()
+        flash('Faculty created successfully', 'success')
+        return redirect(url_for('schedule.create_faculty'))
+
+    faculties = Faculty.query.all()
+
+    if request.method == 'POST':
+        faculty_id = request.form.get('faculty_id')
+        group_name = request.form.get('group_name')
+        faculty = Faculty.query.get(faculty_id)
+
+        if faculty:
+            group = Group(name=group_name, faculty=faculty)
+            db.session.add(group)
+            db.session.commit()
+            flash('Group added successfully', 'success')
+
+    return render_template('schedule/create_faculty.html', form=form, faculties=faculties)
+
+
+@bp.route('/create_group/<int:faculty_id>', methods=['GET', 'POST'])
+def create_group(faculty_id):
+
     form = GroupForm()
+
     group = None
 
     if form.validate_on_submit():
@@ -35,13 +81,15 @@ def create_group():
             flash('Group updated successfully', 'success')
         else:
             # Если группа не существует, создайте новую
-            group = Group(name=name, subgroups=subgroups)
+            group = Group(name=name,
+                          subgroups=subgroups,
+                          faculty_id=faculty_id)
             db.session.add(group)
             flash('Group created successfully', 'success')
 
         db.session.commit()
 
-        return redirect(url_for('schedule.main'))
+        return redirect(url_for('schedule.create_faculty'))
 
     return render_template('schedule/create_group.html',
                            form=form,
@@ -50,21 +98,28 @@ def create_group():
 
 @bp.route('/add_schedule', methods=['GET', 'POST'])
 def add_schedule():
-    selected_group_id = request.args.get('selected_group')
+    selected_group_id = request.args.get('selected_group_id')
     selected_group = Group.query.get(selected_group_id)
+
+    selected_faculty_id = request.args.get('selected_faculty_id')
+    selected_faculty = Faculty.query.get(selected_faculty_id)
 
     form = ScheduleForm()
     form.group.data = selected_group
 
     if selected_group is None:
         flash('Group not found', 'danger')
-        return redirect(url_for('view_all_groups'))
+        return redirect(url_for('schedule.main'))
 
     # Подгружаем существующие значения для групп, дисциплин и аудиторий
     groups = [group for group in Group.query.all()]
     subjects = [subject for subject in Subject.query.all()]
     classrooms = [classroom for classroom in Classroom.query.all()]
-    subgroups = [(0, 'Общее')] + [(int(subgroup), subgroup) for subgroup in selected_group.subgroups.split(',')]
+
+    if selected_group.subgroups is not None and selected_group.subgroups is not '':
+        subgroups = [(0, 'Общее')] + [(int(subgroup), subgroup) for subgroup in selected_group.subgroups.split(',')]
+    else:
+        subgroups = [(0, 'Общее')]
 
     if form.validate_on_submit():
         group_name = selected_group.name
@@ -119,7 +174,8 @@ def add_schedule():
                            groups=groups,
                            subjects=subjects,
                            classrooms=classrooms,
-                           subgroups=subgroups)
+                           subgroups=subgroups,
+                           selected_faculty=selected_faculty)
 
 
 @bp.route('/view_all_schedule', methods=['GET'])
@@ -155,13 +211,43 @@ def view_all_schedule():
                            schedule_entries=schedule_entries)
 
 
+@bp.route('/delete_faculty/<int:faculty_id>', methods=['GET', 'POST'])
+def delete_faculty(faculty_id):
+    faculty = Faculty.query.get_or_404(faculty_id)
+
+    if not faculty:
+        flash('Faculty not found', 'danger')
+        return redirect(url_for('schedule.create_faculty'))
+
+    db.session.delete(faculty)
+    db.session.commit()
+
+    flash('Faculty deleted successfully', 'success')
+    return redirect(url_for('schedule.create_faculty'))
+
+
+@bp.route('/delete_group/<int:group_id>', methods=['GET', 'POST'])
+def delete_group(group_id):
+    group_entry = Group.query.get(group_id)
+
+    if not group_entry:
+        flash('Group not found', 'danger')
+        return redirect(url_for('schedule.create_faculty'))
+
+    db.session.delete(group_entry)
+    db.session.commit()
+
+    flash('Group deleted successfully', 'success')
+    return redirect(url_for('schedule.create_faculty'))
+
+
 @bp.route('/delete_schedule/<int:schedule_id>', methods=['GET', 'POST'])
 def delete_schedule(schedule_id):
     schedule_entry = Schedule.query.get(schedule_id)
 
     if not schedule_entry:
         flash('Schedule not found', 'danger')
-        return redirect(url_for('view_all_schedule'))
+        return redirect(url_for('schedule.view_all_schedule'))
 
     db.session.delete(schedule_entry)
     db.session.commit()

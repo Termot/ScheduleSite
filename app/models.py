@@ -34,13 +34,29 @@ class Schedule(db.Model):
     classroom = db.relationship('Classroom', backref=db.backref('schedules', lazy=True))
 
 
+class Faculty(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+
+    # Связь с группами: один факультет имеет много групп
+    groups = db.relationship('Group', backref='faculty', lazy=True, cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f'<Faculty "{self.name}">'
+
+
 class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(10), unique=True, nullable=False)
     subgroups = db.Column(db.String(32))
 
+    # Внешний ключ для связи с факультетом
+    faculty_id = db.Column(db.Integer, db.ForeignKey('faculty.id'), nullable=False)
+
     def __repr__(self):
-        return '<Group "{}", Subgroups "{}">'.format(self.name, self.subgroups)
+        return (f'{Faculty.query.get(self.faculty_id)}, '
+                f'<Group "{self.name}", '
+                f'Subgroups "{self.subgroups}">')
 
 
 class Subject(db.Model):
@@ -48,7 +64,7 @@ class Subject(db.Model):
     name = db.Column(db.String(100), unique=True, nullable=False)
 
     def __repr__(self):
-        return '<Subject "{}">'.format(self.name)
+        return f'<Subject "{self.name}">'
 
 
 class Classroom(db.Model):
@@ -56,7 +72,7 @@ class Classroom(db.Model):
     name = db.Column(db.String(10), unique=True, nullable=False)
 
     def __repr__(self):
-        return '<Classroom "{}">'.format(self.name)
+        return f'<Classroom "{self.name}">'
 
 
 # Класс для операций с пользователем

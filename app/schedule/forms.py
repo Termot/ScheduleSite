@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import SelectField, SelectMultipleField, StringField, \
-    IntegerField, BooleanField, FieldList
+    IntegerField, BooleanField, FieldList, SubmitField
 from flask_babel import _, lazy_gettext as _l
 from wtforms.validators import DataRequired, NumberRange
 
@@ -9,12 +9,18 @@ DAY_OF_WEEK_CHOICES = [(day, day) for day in
 WEEKS_CHOICES = [(f'{i}', f'{i}') for i in range(1, 20)]
 
 
+class FacultyForm(FlaskForm):
+    name = StringField('Faculty Name', validators=[DataRequired()])
+    submit = SubmitField('Create Faculty')
+
+
 class GroupForm(FlaskForm):
     name = StringField('Group Name', validators=[DataRequired()])
     subgroups = StringField('Subgroup')
 
 
 class ScheduleForm(FlaskForm):
+    faculty = StringField('Faculty', validators=[DataRequired()])
     group = StringField('Group', validators=[DataRequired()])
     subgroup = FieldList(IntegerField('Subgroup', validators=[DataRequired()]))
     subject = StringField('Subject', validators=[DataRequired()])

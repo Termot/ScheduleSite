@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <h1>Create Faculty</h1>
+    <form method="POST">
+        {{ form.csrf_token }}
+        <div class="form-group">
+            {{ form.name.label }}
+            {{ form.name(class="form-control") }}
+        </div>
+        <button type="submit" class="btn btn-primary">{{ form.submit.label }}</button>
+    </form>
+
+    <h2>Existing Faculties</h2>
+    <ul>
+        {% for faculty in faculties %}
+        <li>
+            <strong>{{ faculty.name }}</strong>
+            <div class="float-right">
+                <a href="{{ url_for('schedule.create_group', faculty_id=faculty.id) }}" class="btn btn-success btn-sm">Add Group</a>
+                <form method="POST" action="{{ url_for('schedule.delete_faculty', faculty_id=faculty.id) }}" class="d-inline">
+                    {{ form.csrf_token }}
+                    <button type="submit" class="btn btn-danger btn-sm">Delete Faculty</button>
+                </form>
+            </div>
+            <ul>
+                {% for group in faculty.groups %}
+                <li>
+                    Group: {{ group.name }}, Subgroups: {{ group.subgroups }}
+                    <div class="float-right">
+                        <form method="POST" action="{{ url_for('schedule.delete_group', group_id=group.id) }}" class="d-inline">
+                            {{ form.csrf_token }}
+                            <button type="submit" class="btn btn-danger btn-sm">Delete Group</button>
+                        </form>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </li>
+        {% endfor %}
+    </ul>
+{% endblock %}
