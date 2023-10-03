@@ -22,6 +22,7 @@ class Schedule(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     day_of_week = db.Column(db.String(20), nullable=False)
     weeks = db.Column(db.String(40), nullable=False)
+    even_weeks = db.Column(db.Integer, default=False, nullable=False)
     lesson_number = db.Column(db.Integer, nullable=False)
     is_lecture = db.Column(db.Boolean, default=False, nullable=False)
     subgroup = db.Column(db.Integer, nullable=False)

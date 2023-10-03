@@ -9,12 +9,7 @@
                 {{ form.csrf_token }}
                 <div class="form-group">
                     <label for="group">Group</label>
-                    <input type="text" list="groups" id="group" name="group" class="form-control" value="{{ schedule_entry.group.name }}" readonly>
-                    <datalist id="groups">
-                        {% for group in groups %}
-                            <option value="{{ group.name }}"></option>
-                        {% endfor %}
-                    </datalist>
+                    <input type="text" id="group" name="group" class="form-control" value="{{ schedule_entry.group.name }}" readonly>
                 </div>
 
                 <div class="form-group">
@@ -66,6 +61,19 @@
                 <div id="selected-weeks">
                     <!-- Здесь будут отображаться выбранные недели -->
                 </div>
+
+                <div class="form-group">
+                    {{ form.even_weeks.label }}
+                    <div>
+                        {% for even_weeks_id, even_weeks_name in even_weeks %}
+                            <label class="checkbox-label">
+                                <input type="radio" name="even_weeks" value="{{ even_weeks_id }}" {% if even_weeks_id == selected_even_weeks %}checked{% endif %}>
+                                {{ even_weeks_name }}
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
                 <div class="form-group">
                     {{ form.is_lecture.label(class="form-check-label") }}
                     {{ form.is_lecture(class="form-check-input") }}

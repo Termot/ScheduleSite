@@ -35,4 +35,5 @@ class ScheduleForm(FlaskForm):
     weeks = SelectMultipleField('Weeks',
                                 choices=WEEKS_CHOICES,
                                 validators=[DataRequired()])
+    even_weeks = FieldList(IntegerField('Evenness Weeks', validators=[DataRequired()]))
     is_lecture = BooleanField('Is Lecture')

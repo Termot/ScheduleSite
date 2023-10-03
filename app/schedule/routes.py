@@ -115,6 +115,7 @@ def add_schedule():
     groups = [group for group in Group.query.all()]
     subjects = [subject for subject in Subject.query.all()]
     classrooms = [classroom for classroom in Classroom.query.all()]
+    even_weeks = [(0, 'Все'), (1, 'Четные'), (2, 'Нечетные')]
 
     if selected_group.subgroups is not None and selected_group.subgroups is not '':
         subgroups = [(0, 'Общее')] + [(int(subgroup), subgroup) for subgroup in selected_group.subgroups.split(',')]
@@ -151,6 +152,7 @@ def add_schedule():
 
         # Извлекаем выбранную подгруппу из запроса
         selected_subgroup = int(request.form.get('subgroup', 0))
+        selected_even_weeks = int(request.form.get('even_weeks', 0))
 
         schedule_entry = Schedule(
             group_id=group.id,
@@ -160,6 +162,7 @@ def add_schedule():
             day_of_week=day_of_week,
             lesson_number=lesson_number,
             weeks=','.join(weeks),  # сохраняем выбранные недели как строку
+            even_weeks=selected_even_weeks,
             is_lecture=is_lecture
         )
 
@@ -175,7 +178,8 @@ def add_schedule():
                            subjects=subjects,
                            classrooms=classrooms,
                            subgroups=subgroups,
-                           selected_faculty=selected_faculty)
+                           selected_faculty=selected_faculty,
+                           even_weeks=even_weeks)
 
 
 @bp.route('/view_all_schedule', methods=['GET'])
@@ -264,13 +268,14 @@ def delete_schedule(schedule_id):
 def edit_schedule(schedule_id):
     schedule_entry = Schedule.query.get(schedule_id)
 
-    selected_group_id = schedule_entry.group_id
-    selected_group = Group.query.get(selected_group_id)
-    selected_subgroup = schedule_entry.subgroup
-
     if not schedule_entry:
         flash('Schedule not found', 'danger')
         return redirect(url_for('view_all_schedule'))
+
+    selected_group_id = schedule_entry.group_id
+    selected_group = Group.query.get(selected_group_id)
+    selected_subgroup = schedule_entry.subgroup
+    selected_even_weeks = schedule_entry.even_weeks
 
     form = ScheduleForm(group=schedule_entry.group_id,
                         subject=schedule_entry.subject_id,
@@ -286,23 +291,20 @@ def edit_schedule(schedule_id):
     groups = [group for group in Group.query.all()]
     subjects = [subject for subject in Subject.query.all()]
     classrooms = [classroom for classroom in Classroom.query.all()]
-    subgroups = [(0, 'Общее')] + [(int(subgroup), subgroup) for subgroup in selected_group.subgroups.split(',')]
+    even_weeks = [(0, 'Все'), (1, 'Четные'), (2, 'Нечетные')]
 
-    if form.validate_on_submit():
-        group_name = selected_group.name
+    if selected_group.subgroups is not None and selected_group.subgroups is not '':
+        subgroups = [(0, 'Общее')] + [(int(subgroup), subgroup) for subgroup in selected_group.subgroups.split(',')]
+    else:
+        subgroups = [(0, 'Общее')]
+
+    if request.method == 'POST':
         subject_name = form.subject.data
         classroom_name = form.classroom.data
         day_of_week = form.day_of_week.data
         lesson_number = form.lesson_number.data
         weeks = form.weeks.data
         is_lecture = form.is_lecture.data
-
-        # Получение существующих объектов группы, дисциплины и аудитории или их создание
-        group = Group.query.filter_by(name=group_name).first()
-        if not group:
-            group = Group(name=group_name)
-            db.session.add(group)
-            db.session.commit()
 
         subject = Subject.query.filter_by(name=subject_name).first()
         if not subject:
@@ -317,13 +319,14 @@ def edit_schedule(schedule_id):
             db.session.commit()
 
         selected_subgroup = int(request.form.get('subgroup', 0))
+        selected_even_weeks = int(request.form.get('even_weeks', 0))
 
-        schedule_entry.group_id = group.id
         schedule_entry.subject_id = subject.id
         schedule_entry.classroom_id = classroom.id
         schedule_entry.day_of_week = day_of_week
         schedule_entry.lesson_number = lesson_number
         schedule_entry.weeks = ','.join(weeks)
+        schedule_entry.even_weeks = selected_even_weeks
         schedule_entry.is_lecture = is_lecture
         schedule_entry.subgroup = selected_subgroup
 
@@ -339,4 +342,6 @@ def edit_schedule(schedule_id):
                            subjects=subjects,
                            classrooms=classrooms,
                            subgroups=subgroups,
-                           selected_subgroup=selected_subgroup)
+                           selected_subgroup=selected_subgroup,
+                           selected_even_weeks=selected_even_weeks,
+                           even_weeks=even_weeks)

@@ -25,6 +25,7 @@ def create_schedule(group_name: str,
                     day_of_week: str,
                     lesson_number: int,
                     weeks: str,
+                    even_weeks: int,
                     is_lecture: bool):
 
     # Получение существующих объектов группы, дисциплины и аудитории или их создание
@@ -51,6 +52,7 @@ def create_schedule(group_name: str,
         day_of_week=day_of_week,  # str
         lesson_number=lesson_number,  # int
         weeks=weeks,  # str
+        even_weeks=even_weeks,
         is_lecture=is_lecture  # bool
     )
     db.session.add(schedule_entry)
@@ -73,6 +75,7 @@ def main():
                     day_of_week='Понедельник',
                     lesson_number=1,
                     weeks='10,11,12,13,14,15,16',
+                    even_weeks=0,
                     is_lecture=False)
 
 

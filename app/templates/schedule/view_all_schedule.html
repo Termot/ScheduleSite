@@ -20,7 +20,7 @@
                 <tr>
                     <td>{% if entry.subgroup != 0 %}{{ entry.group.name }}/{{ entry.subgroup }}{% else %}{{ entry.group.name }}{% endif %}</td>
                     <td>{{ entry.day_of_week }}</td>
-                    <td>{{ entry.weeks }}</td>
+                    <td>{{ entry.weeks }} {% if entry.even_weeks == 1 %}ч/н{% elif entry.even_weeks == 2 %}н/н{% endif %}</td>
                     <td>{{ entry.lesson_number }}</td>
                     {% if entry.is_lecture %}
                         <td>{{ entry.subject.name|upper }}</td>
