@@ -219,6 +219,10 @@ def delete_faculty(faculty_id):
         flash('Faculty not found', 'danger')
         return redirect(url_for('schedule.create_faculty'))
 
+    # Заранее удаляем расписания для групп факультета
+    for group in faculty.groups:
+        db.session.query(Schedule).filter_by(group_id=group.id).delete()
+
     db.session.delete(faculty)
     db.session.commit()
 
