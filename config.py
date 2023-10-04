@@ -25,9 +25,6 @@ class Config(object):
 
     ADMINS = ['termometronator@gmail.com', 'slowlii80085@gmail.com']
 
-    # Количество постов на одной странице
-    POSTS_PER_PAGE = 5
-
     # Языки перевода сайта
     LANGUAGES = ['ru', 'en']
 

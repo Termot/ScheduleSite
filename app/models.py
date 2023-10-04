@@ -48,7 +48,8 @@ class Faculty(db.Model):
 
 class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(10), unique=True, nullable=False)
+    name = db.Column(db.String(16), unique=True, nullable=False)
+    full_name = db.Column(db.String(128), unique=True, nullable=False)
     subgroups = db.Column(db.String(32))
 
     # Внешний ключ для связи с факультетом
@@ -83,7 +84,6 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
-    posts = db.relationship('Post', backref='author', lazy='dynamic')
     about_me = db.Column(db.String(140))
     last_seen = (db.Column(db.DateTime, default=datetime.utcnow))
     followed = db.relationship(
@@ -127,13 +127,6 @@ class User(UserMixin, db.Model):
         return self.followed.filter(
             followers.c.followed_id == user.id).count() > 0
 
-    def followed_posts(self):
-        followed = Post.query.join(
-            followers, (followers.c.followed_id == Post.user_id)).filter(
-            followers.c.follower_id == self.id)  # посты тех, на кого подписался
-        own = Post.query.filter_by(user_id=self.id)  # посты самого пользователя
-        return followed.union(own).order_by(Post.timestamp.desc())  # объединение и сортировка
-
     def get_reset_password_token(self, expires_in=600):
         return jwt.encode(
             {'reset_password': self.id, 'exp': time() + expires_in},
@@ -175,7 +168,6 @@ class User(UserMixin, db.Model):
             'username': self.username,
             'last_seen': self.last_seen.isoformat() + 'Z',
             'about_me': self.about_me,
-            'post_count': self.posts.count(),
             'follower_count': self.followers.count(),
             'followed_count': self.followed.count(),
             '_links': {
@@ -195,18 +187,6 @@ class User(UserMixin, db.Model):
                 setattr(self, field, data[field])
         if new_user and 'password' in data:
             self.set_password(data['password'])
-
-
-# Класс для операций с постами
-class Post(db.Model):
-    # Разные значения поста
-    id = db.Column(db.Integer, primary_key=True)
-    body = db.Column(db.String(140))
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-
-    def __repr__(self):
-        return '<Post "{}">'.format(self.body)
 
 
 class Notification(db.Model):

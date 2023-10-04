@@ -24,8 +24,3 @@ class EditProfileForm(FlaskForm):
 # Форма кнопки
 class EmptyForm(FlaskForm):
     submit = SubmitField('Submit')
-
-# Форма отправки сообщения
-class PostForm(FlaskForm):
-    post = TextAreaField(_l('Say something'), validators=[DataRequired()])
-    submit = SubmitField(_l('Send'))

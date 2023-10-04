@@ -16,6 +16,7 @@ class FacultyForm(FlaskForm):
 
 class GroupForm(FlaskForm):
     name = StringField('Group Name', validators=[DataRequired()])
+    full_name = StringField('Group Full Name', validators=[DataRequired()])
     subgroups = StringField('Subgroup')
 
 

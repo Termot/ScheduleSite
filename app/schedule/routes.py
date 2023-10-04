@@ -73,6 +73,7 @@ def create_group(faculty_id):
 
     if form.validate_on_submit():
         name = form.name.data
+        full_name = form.full_name.data
         subgroups = form.subgroups.data
 
         # Попробуйте найти существующую группу с заданным именем
@@ -80,11 +81,13 @@ def create_group(faculty_id):
 
         if group:
             # Если группа существует, обновите ее
+            group.full_name = full_name
             group.subgroups = subgroups
             flash('Group updated successfully', 'success')
         else:
             # Если группа не существует, создайте новую
             group = Group(name=name,
+                          full_name=full_name,
                           subgroups=subgroups,
                           faculty_id=faculty_id)
             db.session.add(group)
