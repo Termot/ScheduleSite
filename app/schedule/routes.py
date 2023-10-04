@@ -14,7 +14,8 @@ def main():
 
     return render_template('schedule/main.html',
                            groups=groups,
-                           faculties=faculties)
+                           faculties=faculties,
+                           title='Schedule')
 
 
 @bp.route('/get_groups_by_faculty/<int:faculty_id>', methods=['GET'])
@@ -58,7 +59,9 @@ def create_faculty():
             db.session.commit()
             flash('Group added successfully', 'success')
 
-    return render_template('schedule/create_faculty.html', form=form, faculties=faculties)
+    return render_template('schedule/create_faculty.html',
+                           form=form,
+                           faculties=faculties)
 
 
 @bp.route('/create_group/<int:faculty_id>', methods=['GET', 'POST'])
@@ -122,21 +125,14 @@ def add_schedule():
     else:
         subgroups = [(0, 'Общее')]
 
-    if form.validate_on_submit():
-        group_name = selected_group.name
+    # if form.validate_on_submit():
+    if request.method == 'POST':
         subject_name = form.subject.data
         classroom_name = form.classroom.data
         day_of_week = form.day_of_week.data
         lesson_number = form.lesson_number.data
         weeks = form.weeks.data
         is_lecture = form.is_lecture.data
-
-        # Получение существующих объектов группы, дисциплины и аудитории или их создание
-        group = Group.query.filter_by(name=group_name).first()
-        if not group:
-            group = Group(name=group_name)
-            db.session.add(group)
-            db.session.commit()
 
         subject = Subject.query.filter_by(name=subject_name).first()
         if not subject:
@@ -155,7 +151,7 @@ def add_schedule():
         selected_even_weeks = int(request.form.get('even_weeks', 0))
 
         schedule_entry = Schedule(
-            group_id=group.id,
+            group_id=selected_group_id,
             subgroup=selected_subgroup,
             subject_id=subject.id,
             classroom_id=classroom.id,
