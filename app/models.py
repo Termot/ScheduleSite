@@ -81,6 +81,11 @@ class User(UserMixin, db.Model):
                                     lazy='dynamic')
     tasks = db.relationship('Task', backref='user', lazy='dynamic')
 
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'))
+    subgroup = db.Column(db.Integer)
+
+    group = db.relationship('Group', backref=db.backref('members', lazy='dynamic'))
+
     def __repr__(self):
         return '<User "{}">'.format(self.username)
 
