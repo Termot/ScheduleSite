@@ -10,13 +10,6 @@ import json
 import redis
 import rq
 
-# Таблица подписчиков
-followers = db.Table(
-    'followers',
-    db.Column('follower_id', db.Integer, db.ForeignKey('user.id')),
-    db.Column('followed_id', db.Integer, db.ForeignKey('user.id'))
-)
-
 
 class Schedule(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -77,20 +70,13 @@ class Classroom(db.Model):
         return f'<Classroom "{self.name}">'
 
 
-# Класс для операций с пользователем
 class User(UserMixin, db.Model):
-    # Разные значения пользователя
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
     about_me = db.Column(db.String(140))
     last_seen = (db.Column(db.DateTime, default=datetime.utcnow))
-    followed = db.relationship(
-        'User', secondary=followers,
-        primaryjoin=(followers.c.follower_id == id),
-        secondaryjoin=(followers.c.followed_id == id),
-        backref=db.backref('followers', lazy='dynamic'), lazy='dynamic')
     notifications = db.relationship('Notification', backref='user',
                                     lazy='dynamic')
     tasks = db.relationship('Task', backref='user', lazy='dynamic')
@@ -111,21 +97,6 @@ class User(UserMixin, db.Model):
         digest = md5(self.email.lower().encode('utf-8')).hexdigest()
         return 'https://www.gravatar.com/avatar/{}?d=identicon&s={}'.format(
             digest, size)
-
-    # Подписка пользователя
-    def follow(self, user):
-        if not self.is_following(user):
-            self.followed.append(user)
-
-    # Отписка пользователя
-    def unfollow(self, user):
-        if self.is_following(user):
-            self.followed.remove(user)
-
-    # Подписан ли пользователь
-    def is_following(self, user):
-        return self.followed.filter(
-            followers.c.followed_id == user.id).count() > 0
 
     def get_reset_password_token(self, expires_in=600):
         return jwt.encode(
@@ -168,12 +139,8 @@ class User(UserMixin, db.Model):
             'username': self.username,
             'last_seen': self.last_seen.isoformat() + 'Z',
             'about_me': self.about_me,
-            'follower_count': self.followers.count(),
-            'followed_count': self.followed.count(),
             '_links': {
                 'self': url_for('api.get_user', id=self.id),
-                'followers': url_for('api.get_followers', id=self.id),
-                'followed': url_for('api.get_followed', id=self.id),
                 'avatar': self.avatar(128)
             }
         }

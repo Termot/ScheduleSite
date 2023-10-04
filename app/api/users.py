@@ -11,16 +11,6 @@ def get_users():
     pass
 
 
-@bp.route('/users/<int:id>/followers', methods=['GET'])
-def get_followers(id):
-    pass
-
-
-@bp.route('/users/<int:id>/followed', methods=['GET'])
-def get_followed(id):
-    pass
-
-
 @bp.route('/users', methods=['POST'])
 def create_user():
     pass
