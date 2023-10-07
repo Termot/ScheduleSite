@@ -5,9 +5,11 @@ from app import db
 from app.models import Schedule, Group, Subject, Classroom, Faculty
 from app.schedule import bp
 from app.schedule.forms import ScheduleForm, GroupForm, FacultyForm
+from app.roles import schedule_editor_required
 
 
 @bp.route('/', methods=['GET', 'POST'])
+@schedule_editor_required
 def main():
     groups = [group for group in Group.query.all()]
     faculties = [faculty for faculty in Faculty.query.all()]

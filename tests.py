@@ -34,35 +34,6 @@ class UserModelCase(unittest.TestCase):
                                          'd4c74594d841139328695756648b6bd6'
                                          '?d=identicon&s=128'))
 
-    def test_schedule(self):
-        day_of_the_week = 'Понедельник'
-        weeks = '1-3'
-        evenness = 'all'
-        couple = 1
-        group = 'Г-301'
-        discipline = 'Математика'
-        auditory = '312/3'
-
-
-        table_day_of_the_week = DayOfTheWeek(day_of_the_week=day_of_the_week)
-        table_evenness = Evenness(weeks=weeks, evenness=evenness)
-        table_couple = Couple(couple=couple)
-        table_group = Group(group=group)
-        table_discipline = Discipline(discipline=discipline)
-        table_auditory = Auditory(auditory=auditory)
-
-        s_helper = ScheduleHelper()
-
-        s_helper.day_of_the_week.append(table_day_of_the_week)
-        s_helper.evenness.append(table_evenness)
-        s_helper.couple.append(table_couple)
-        s_helper.group.append(table_group)
-        s_helper.discipline.append(table_discipline)
-        s_helper.auditory.append(table_auditory)
-
-        db.session.add(s_helper)
-        db.session.commit()
-
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

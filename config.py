@@ -1,6 +1,7 @@
 import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 
+
 class Config(object):
     TEMPLATES_AUTO_RELOAD = True  # при изменении html не надо перезапускать flask
 
@@ -17,15 +18,14 @@ class Config(object):
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME') or 'termometronator@gmail.com'
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD') or 'elwmmxuzncjbgdfa'
 
-    # MAIL_SERVER = 'smtp.gmail.com'
-    # MAIL_PORT = 587
-    # MAIL_USE_TLS = True
-    # MAIL_USERNAME = 'termometronator@gmail.com'
-    # MAIL_PASSWORD = 'elwmmxuzncjbgdfa'
-
     ADMINS = ['termometronator@gmail.com', 'slowlii80085@gmail.com']
 
     # Языки перевода сайта
     LANGUAGES = ['ru', 'en']
 
     REDIS_URL = os.environ.get('REDIS_URL') or 'redis://'
+
+    ROLES = [('Admin', 'Admin role'),
+             ('User', 'User role'),
+             ('ScheduleEditor', 'Schedule editor role'),
+             ('Teacher', 'Teacher role')]

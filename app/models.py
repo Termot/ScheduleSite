@@ -42,7 +42,7 @@ class Faculty(db.Model):
 class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(16), unique=True, nullable=False)
-    full_name = db.Column(db.String(128), unique=True, nullable=False)
+    full_name = db.Column(db.String(128), nullable=False)
     subgroups = db.Column(db.String(32))
 
     # Внешний ключ для связи с факультетом
@@ -70,6 +70,15 @@ class Classroom(db.Model):
         return f'<Classroom "{self.name}">'
 
 
+class Role(db.Model):
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(80), unique=True)
+    description = db.Column(db.String(255))
+
+    def __repr__(self):
+        return f'<Role "{self.name}">'
+
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
@@ -83,6 +92,9 @@ class User(UserMixin, db.Model):
 
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'))
     subgroup = db.Column(db.Integer)
+
+    role_id = db.Column(db.Integer(), db.ForeignKey('role.id'))
+    role = db.relationship('Role', backref=db.backref('users', lazy='dynamic'))
 
     group = db.relationship('Group', backref=db.backref('members', lazy='dynamic'))
 
