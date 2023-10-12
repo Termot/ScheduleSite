@@ -1,11 +1,15 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_babel import _
-from flask_login import login_required
+from flask_login import login_required, current_user
+from sqlalchemy.exc import SQLAlchemyError
+
+import app.api.schedule
 from app import db
 from app.models import Schedule, Group, Subject, Classroom, Faculty
 from app.schedule import bp
 from app.schedule.forms import ScheduleForm, GroupForm, FacultyForm
 from app.roles import schedule_editor_required
+from operator import attrgetter
 
 
 @bp.route('/', methods=['GET', 'POST'])
@@ -35,6 +39,19 @@ def get_groups_by_faculty(faculty_id):
     groups_list = [{'id': group.id, 'name': group.name} for group in groups]
 
     return jsonify({'groups': groups_list})
+
+
+@bp.route('/get_subgroups_by_group/<int:group_id>')
+def get_subgroups_by_group(group_id):
+    group = Group.query.get(group_id)
+
+    if group:
+        subgroups = group.subgroups.split(',') if group.subgroups else []
+        subgroups_list = [{'id': int(subgroup), 'name': subgroup} for subgroup in subgroups]
+    else:
+        subgroups_list = []
+
+    return jsonify({'subgroups': subgroups_list})
 
 
 @bp.route('/create_faculty', methods=['GET', 'POST'])
@@ -168,7 +185,12 @@ def add_schedule():
         )
 
         db.session.add(schedule_entry)
-        db.session.commit()
+
+        try:
+            db.session.commit()
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            print(f'SQLAlchemyError: {e}')
 
         return redirect(url_for('schedule.view_all_schedule'))
 
@@ -187,8 +209,69 @@ def add_schedule():
 def view_all_schedule():
     schedule_entries = Schedule.query.all()
 
+    # Определите порядок дней недели
+    weekdays_order = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
+
+    # Создайте функцию, которая будет использоваться для сортировки
+    def custom_sort(entry):
+        return weekdays_order.index(entry.day_of_week), entry.lesson_number
+
+    # Сортируйте расписание с использованием пользовательской функции сортировки
+    schedule_entries = sorted(schedule_entries, key=custom_sort)
+
     # Проходим по всем записям и форматируем их недели
     for entry in schedule_entries:
+        weeks_list = entry.weeks.split(',')
+        formatted_weeks = []
+
+        try:
+            current_range = [int(weeks_list[0])]
+        except:
+            print(f'Error in schedule: {entry}.')
+            continue
+
+        for week_str in weeks_list[1:]:
+                week = int(week_str)
+                if week == current_range[-1] + 1:
+                    current_range.append(week)
+                else:
+                    if len(current_range) == 1:
+                        formatted_weeks.append(str(current_range[0]))
+                    else:
+                        formatted_weeks.append(f"{current_range[0]}-{current_range[-1]}")
+                    current_range = [week]
+
+        if len(current_range) == 1:
+            formatted_weeks.append(str(current_range[0]))
+        else:
+            formatted_weeks.append(f"{current_range[0]}-{current_range[-1]}")
+
+        entry.weeks = ', '.join(formatted_weeks)
+
+    return render_template('schedule/view_all_schedule.html',
+                           schedule_entries=schedule_entries)
+
+
+@bp.route('/view_current_schedule', methods=['GET', 'POST'])
+@login_required
+def view_current_schedule():
+    user = current_user
+    group_id = current_user.group_id
+
+    if not group_id:
+        flash('You not have group')
+        return redirect(url_for('schedule.select_group'))
+
+    schedule_entries = Schedule.query.all()
+
+    user_schedule = []
+    for entry in schedule_entries:
+        if entry.group_id == group_id:
+            if entry.subgroup == current_user.subgroup or entry.subgroup == 0:
+                user_schedule.append(entry)
+
+    # Проходим по всем записям и форматируем их недели
+    for entry in user_schedule:
         weeks_list = entry.weeks.split(',')
         formatted_weeks = []
 
@@ -212,8 +295,38 @@ def view_all_schedule():
 
         entry.weeks = ', '.join(formatted_weeks)
 
-    return render_template('schedule/view_all_schedule.html',
-                           schedule_entries=schedule_entries)
+    return render_template('schedule/view_current_schedule.html',
+                           schedule_entries=user_schedule,
+                           user=user,
+                           academic_week=app.api.schedule.academic_year_number(),
+                           title='Current Schedule')
+
+
+@bp.route('/select_group', methods=['GET', 'POST'])
+@login_required
+def select_group():
+    groups = [group for group in Group.query.all()]
+    faculties = [faculty for faculty in Faculty.query.all()]
+
+    return render_template('schedule/select_group.html',
+                           groups=groups,
+                           faculties=faculties,
+                           title='Select Group')
+
+
+@bp.route('/add_group_for_student', methods=['GET', 'POST'])
+@login_required
+def add_group_for_student():
+    selected_faculty_id = request.args.get('selected_faculty_id')
+    selected_group_id = request.args.get('selected_group_id')
+    selected_subgroup = request.args.get('selected_subgroup')
+
+    current_user.group_id = selected_group_id
+    current_user.subgroup = selected_subgroup
+
+    db.session.commit()
+
+    return redirect(url_for('schedule.view_current_schedule'))
 
 
 @bp.route('/delete_faculty/<int:faculty_id>', methods=['GET', 'POST'])

@@ -2,9 +2,9 @@ from app import db, create_app
 from app.models import Schedule, Group, Subject, Classroom, Faculty
 
 
-def create_faculty_and_group(faculty_name, group_name, subgroups):
-    faculty_id = Faculty.query.filter_by(name=faculty_name).first().id
-    if not faculty_id:
+def create_faculty_and_group(faculty_name, group_name, full_name, subgroups):
+    faculty = Faculty.query.filter_by(name=faculty_name).first()
+    if not faculty:
         db.session.add(Faculty(name=faculty_name))
         db.session.commit()
         print(f'Create faculty "{faculty_name}"')
@@ -12,8 +12,9 @@ def create_faculty_and_group(faculty_name, group_name, subgroups):
     group = Group.query.filter_by(name=group_name).first()
     if not group:
         db.session.add(Group(name=group_name,
+                             full_name=full_name,
                              subgroups=subgroups,
-                             faculty_id=faculty_id))
+                             faculty_id=faculty.id))
         db.session.commit()
         print(f'Create group "{group_name}" with subgroups "{subgroups}"')
 
@@ -33,16 +34,19 @@ def create_schedule(group_name: str,
     if not group:
         group = Group(name=group_name)
         db.session.add(group)
+        db.session.commit()
 
     subject = Subject.query.filter_by(name=subject_name).first()
     if not subject:
         subject = Subject(name=subject_name)
         db.session.add(subject)
+        db.session.commit()
 
     classroom = Classroom.query.filter_by(name=classroom_name).first()
     if not classroom:
         classroom = Classroom(name=classroom_name)
         db.session.add(classroom)
+        db.session.commit()
 
     schedule_entry = Schedule(
         group_id=group.id,  # int
@@ -64,9 +68,10 @@ def create_schedule(group_name: str,
 def main():
     faculty_name = 'Природопользование и строительство'
     group_name = 'Г-301'
+    full_name = 'Геодезия и дистанционное зондирование'
     subgroups = '1,2'
 
-    create_faculty_and_group(faculty_name, group_name, subgroups)
+    create_faculty_and_group(faculty_name, group_name, full_name, subgroups)
 
     create_schedule(group_name=group_name,
                     subgroup=2,

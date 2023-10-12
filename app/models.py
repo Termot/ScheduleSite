@@ -67,7 +67,7 @@ class Classroom(db.Model):
     name = db.Column(db.String(10), unique=True, nullable=False)
 
     def __repr__(self):
-        return f'<Classroom "{self.name}">'
+        return f'<Classroom "{self.name}", id={self.id}>'
 
 
 class Role(db.Model):

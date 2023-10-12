@@ -2,10 +2,10 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    <h1>Main Page</h1>
+    <h1>Select Your Group</h1>
     <div class="row">
         <div class="col-md-6">
-            <form method="GET" action="{{ url_for('schedule.add_schedule') }}">
+            <form method="GET" action="{{ url_for('schedule.add_group_for_student') }}">
                 <div class="form-group">
                     <label for="faculty_select">Select a Faculty</label>
                     <select class="form-control" id="faculty_select" name="selected_faculty_id">
@@ -20,15 +20,16 @@
                         <!-- Опции групп будут добавлены с помощью JavaScript -->
                     </select>
                 </div>
-                <form method="GET" action="{{ url_for('schedule.add_schedule', selected_group_id=selected_group_id, selected_faculty_id=selected_faculty_id) }}">
-                    <button type="submit" class="btn btn-primary">Add Schedule</button>
-                </form>
+                <div class="form-group">
+                    <label for="group_select">Select a Subgroup</label>
+                    <select class="form-control" id="subgroup_select" name="selected_subgroup" disabled>
+                        <!-- Опции подгрупп будут добавлены с помощью JavaScript -->
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Select Group</button>
             </form>
         </div>
     </div>
-    <a href="{{ url_for('schedule.view_all_schedule') }}" class="btn btn-success btn-sm">View All Schedules</a>
-    <a href="{{ url_for('schedule.create_faculty') }}" class="btn btn-success btn-sm">Create Faculty</a>
-    <a href="{{ url_for('schedule.view_current_schedule') }}" class="btn btn-success btn-sm">View Current Schedule</a>
 {% endblock %}
 
 {% block scripts %}
@@ -36,6 +37,7 @@
         // Получаем элементы выбора факультета и группы
         const facultySelect = document.getElementById('faculty_select');
         const groupSelect = document.getElementById('group_select');
+        const subgroupSelect = document.getElementById('subgroup_select');
 
         // Функция для обновления опций в поле выбора групп
         function updateGroupOptions(groups) {
@@ -62,6 +64,31 @@
             }
         }
 
+        // Функция для обновления опций в поле выбора подгрупп
+        function updateSubgroupOptions(subgroups) {
+            // Очищаем текущие опции
+            subgroupSelect.innerHTML = '';
+
+            // Если есть доступные подгруппы, добавляем их как опции
+            if (subgroups.length > 0) {
+                subgroups.forEach(subgroup => {
+                    const option = document.createElement('option');
+                    option.value = subgroup.id;
+                    option.textContent = subgroup.name;
+                    subgroupSelect.appendChild(option);
+                });
+
+                // Включаем поле выбора подгрупп и убираем атрибут disabled
+                subgroupSelect.removeAttribute('disabled');
+            } else {
+                // Если нет доступных подгрупп, добавляем пустую опцию и устанавливаем атрибут disabled
+                const option = document.createElement('option');
+                option.textContent = 'No subgroups available';
+                subgroupSelect.appendChild(option);
+                subgroupSelect.setAttribute('disabled', 'disabled');
+            }
+        }
+
         document.addEventListener("DOMContentLoaded", function () {
             const facultySelect = document.getElementById("faculty_select");
             const groupSelect = document.getElementById("group_select");
@@ -74,11 +101,26 @@
                     .then(data => {
                         const groups = data.groups;
                         updateGroupOptions(groups);
+                        handleGroupChange();
+
+                    });
+            }
+
+            // Определите вашу функцию обработки события изменения группы
+            function handleGroupChange() {
+                const selectedGroupId = groupSelect.value;
+                fetch(`/schedule/get_subgroups_by_group/${selectedGroupId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const subgroups = data.subgroups;
+                        updateSubgroupOptions(subgroups);
                     });
             }
 
             // Добавьте слушателя события изменения факультета
             facultySelect.addEventListener('change', handleFacultyChange);
+            // Добавьте слушателя события изменения группы
+            groupSelect.addEventListener('change', handleGroupChange);
 
             // Вызовите функцию один раз при загрузке страницы
             handleFacultyChange();

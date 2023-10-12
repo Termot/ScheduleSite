@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <h1>Schedule for group {{ user.group.name }}/{{ user.subgroup }}</h1>
+    <a href="{{ url_for('schedule.select_group') }}" class="btn btn-success btn-sm">Change My Group</a>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Group</th>
+                <th>Day of the Week</th>
+                <th>Weeks</th>
+                <th>Lesson Number</th>
+                <th>Subject</th>
+                <th>Classroom</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in schedule_entries %}
+                <tr>
+                    <td>{% if entry.subgroup != 0 %}{{ entry.group.name }}/{{ entry.subgroup }}{% else %}{{ entry.group.name }}{% endif %}</td>
+                    <td>{{ entry.day_of_week }}</td>
+                    <td>{{ entry.weeks }} {% if entry.even_weeks == 1 %}ч/н{% elif entry.even_weeks == 2 %}н/н{% endif %}</td>
+                    <td>{{ entry.lesson_number }}</td>
+                    {% if entry.is_lecture %}
+                        <td>{{ entry.subject.name|upper }}</td>
+                    {% else %}
+                        <td>{{ entry.subject.name }}</td>
+                    {% endif %}
+                    <td>{{ entry.classroom.name }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

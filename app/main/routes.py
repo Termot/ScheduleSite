@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import render_template, flash, redirect, url_for, request, g, current_app
+from flask import render_template, flash, redirect, url_for, request, g
 from flask_login import current_user, login_required
 from flask_babel import _, get_locale
 from app import db
@@ -21,6 +21,11 @@ def before_request():
 @login_required
 def index():
     return render_template('index.html', title=_('Home'))
+
+
+@bp.route('/favicon.ico')
+def favicon():
+    return url_for('static', filename='favicon.ico')
 
 
 @bp.route('/user/<username>')
