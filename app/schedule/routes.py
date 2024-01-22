@@ -1,15 +1,37 @@
-import json
+from functools import wraps
 
-from flask import render_template, redirect, url_for, flash, request, jsonify
+from flask import render_template, redirect, url_for, flash, request, \
+    jsonify, abort
 from flask_babel import _
-from flask_login import login_required
+from flask_login import login_required, current_user
 from app import db
 from app.models import Schedule, Group, Subject, Classroom
 from app.schedule import bp
 from app.schedule.forms import ScheduleForm, GroupForm
 
 
+def role_required(role):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not current_user.has_role(role):
+                abort(403)
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+
+def admin_required(f):
+    return role_required('admin')(f)
+
+
+def editor_required(f):
+    return role_required('editor')(f)
+
+
 @bp.route('/', methods=['GET', 'POST'])
+@login_required
+@editor_required
 def main():
     groups = [group for group in Group.query.all()]
 

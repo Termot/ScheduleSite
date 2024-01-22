@@ -2,11 +2,13 @@ from flask import render_template, redirect, url_for, flash, request
 from werkzeug.urls import url_parse
 from flask_login import login_user, logout_user, current_user
 from flask_babel import _
+
+import app.api.auth
 from app import db
 from app.auth import bp
 from app.auth.forms import LoginForm, RegistrationForm, \
     ResetPasswordRequestForm, ResetPasswordForm
-from app.models import User
+from app.models import User, Role
 from app.auth.emails import send_password_reset_email
 
 
@@ -41,6 +43,17 @@ def register():
     form = RegistrationForm()
     if form.validate_on_submit():
         user = User(username=form.username.data, email=form.email.data)
+        password_check = app.api.auth.password_check(form.password.data)  # change
+
+        if not password_check['password_ok']:
+            if password_check['length_error']: flash(_('Недостаточная длина пароля (минимальная длина 8)'))
+            elif password_check['digit_error']: flash(_('Нет чисел в пароле'))
+            elif password_check['uppercase_error']: flash(_('Нет заглавных букв в пароле'))
+            elif password_check['lowercase_error']: flash(_('Нет строчных букв в пароле'))
+            elif password_check['symbol_error']: flash(_('Нет символов в пароле (!@#$%&...)'))
+
+            return redirect(url_for('auth.register'))
+
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()

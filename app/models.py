@@ -3,6 +3,7 @@ from hashlib import md5
 from time import time
 from flask import current_app, url_for
 from flask_login import UserMixin
+from flask_security import RoleMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from app import db, login
@@ -59,14 +60,33 @@ class Classroom(db.Model):
         return '<Classroom "{}">'.format(self.name)
 
 
+roles_users = db.Table(
+    'roles_users',
+    db.Column('user_id', db.Integer(), db.ForeignKey('user.id')),
+    db.Column('role_id', db.Integer(), db.ForeignKey('roles.id'))
+)
+
+
+class Role(db.Model, RoleMixin):
+    __tablename__ = 'roles'
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(80), unique=True)
+    description = db.Column(db.String(255))
+
+    def __str__(self):
+        return self.name
+
+
 # Класс для операций с пользователем
-class User(UserMixin, db.Model):
+class User(db.Model, UserMixin):
+    __tablename__ = 'user'
+
     # Разные значения пользователя
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
+    roles = db.relationship('Role', secondary=roles_users, backref=db.backref('user', lazy='dynamic'))
     password_hash = db.Column(db.String(128))
-    posts = db.relationship('Post', backref='author', lazy='dynamic')
     about_me = db.Column(db.String(140))
     last_seen = (db.Column(db.DateTime, default=datetime.utcnow))
     followed = db.relationship(
@@ -110,13 +130,6 @@ class User(UserMixin, db.Model):
         return self.followed.filter(
             followers.c.followed_id == user.id).count() > 0
 
-    def followed_posts(self):
-        followed = Post.query.join(
-            followers, (followers.c.followed_id == Post.user_id)).filter(
-            followers.c.follower_id == self.id)  # посты тех, на кого подписался
-        own = Post.query.filter_by(user_id=self.id)  # посты самого пользователя
-        return followed.union(own).order_by(Post.timestamp.desc())  # объединение и сортировка
-
     def get_reset_password_token(self, expires_in=600):
         return jwt.encode(
             {'reset_password': self.id, 'exp': time() + expires_in},
@@ -156,16 +169,16 @@ class User(UserMixin, db.Model):
         data = {
             'id': self.id,
             'username': self.username,
+            'roles': self.roles,
             'last_seen': self.last_seen.isoformat() + 'Z',
             'about_me': self.about_me,
-            'post_count': self.posts.count(),
             'follower_count': self.followers.count(),
             'followed_count': self.followed.count(),
             '_links': {
                 'self': url_for('api.get_user', id=self.id),
                 'followers': url_for('api.get_followers', id=self.id),
                 'followed': url_for('api.get_followed', id=self.id),
-                'avatar': self.avatar(128)
+                'avatar': self.avatar(128)  # change
             }
         }
         if include_email:
@@ -176,20 +189,12 @@ class User(UserMixin, db.Model):
         for field in ['username', 'email', 'about_me']:
             if field in data:
                 setattr(self, field, data[field])
-        if new_user and 'password' in data:
-            self.set_password(data['password'])
+        # if new_user and 'password' in data:
+        #     self.set_password(data['password'])
 
-
-# Класс для операций с постами
-class Post(db.Model):
-    # Разные значения поста
-    id = db.Column(db.Integer, primary_key=True)
-    body = db.Column(db.String(140))
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-
-    def __repr__(self):
-        return '<Post "{}">'.format(self.body)
+    # Flask-Security
+    def has_role(self, *args):
+        return set(args).issubset({role.name for role in self.roles})
 
 
 class Notification(db.Model):

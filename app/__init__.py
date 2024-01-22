@@ -38,7 +38,7 @@ def create_app(config_class=Config):
     mail.init_app(app)
     bootstrap.init_app(app)
     moment.init_app(app)
-    babel.init_app(app, locale_selector=get_locale)
+    babel.init_app(app)
 
     app.register_blueprint(cli_bp)
     app.redis = Redis.from_url(app.config['REDIS_URL'])
@@ -93,6 +93,7 @@ def create_app(config_class=Config):
 
 
 def get_locale():
+    """Fix it"""
     # return request.accept_languages.best_match(app.config['LANGUAGES'])
     return 'ru'
 

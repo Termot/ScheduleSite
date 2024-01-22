@@ -4,7 +4,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 class Config(object):
     TEMPLATES_AUTO_RELOAD = True  # при изменении html не надо перезапускать flask
 
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
+    SECRET_KEY = os.environ.get('SECRET_KEY') or '923r2dkk23-idwkkaii093-#904T%$(*&'
 
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, 'app.db')
@@ -30,5 +30,6 @@ class Config(object):
 
     # Языки перевода сайта
     LANGUAGES = ['ru', 'en']
+    BABEL_DEFAULT_LOCALE = 'ru'
 
     REDIS_URL = os.environ.get('REDIS_URL') or 'redis://'
